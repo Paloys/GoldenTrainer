@@ -1,0 +1,1 @@
+﻿modoptions_examplemodule_title= GoldenTrainer
