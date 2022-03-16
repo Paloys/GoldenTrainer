@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using GoldenTrainer;
+using Microsoft.Xna.Framework;
 using Monocle;
 using System;
 
@@ -21,6 +22,10 @@ namespace Celeste.Mod.Example
 
         public int CompletionCount { get; set; } = 0;
 
+        private bool DeathCausedByMod { get; set; } = false;
+
+        public CompleteDisplay display = null;
+        public Level level = null;
 
         // Initialized in LoadContent, after graphics and other assets have been loaded.
         public SpriteBank ExampleSpriteBank;
@@ -35,10 +40,19 @@ namespace Celeste.Mod.Example
             // The default LogLevel when using Logger.Log is Verbose.
             Logger.Log(LogLevel.Verbose, "GoldenTrainer", "This line would not be logged with SetLogLevel LogLevel.Info");
             Everest.Events.Level.OnTransitionTo += RespawnAtEnd;
+            Everest.Events.Player.OnDie += ResetUponDeath;
+            On.Celeste.LevelLoader.LoadingThread += (orig, self) =>
+            {
+                orig(self);
+                self.Level.Add(display = new CompleteDisplay(self.Level));
+                display.SetDisplayText(Instance.CompletionCount.ToString() + "/" + Settings.NumberOfCompletions.ToString());
+                level = self.Level;
+            };
         }
+
         
 
-            // Optional, initialize anything after Celeste has initialized itself properly.
+        // Optional, initialize anything after Celeste has initialized itself properly.
         public override void Initialize()
         {
         }
@@ -51,20 +65,31 @@ namespace Celeste.Mod.Example
 
         private void RespawnAtEnd(Level level, LevelData next, Vector2 direction)
         {
-            if (Settings.ModActivate)
+            if (Settings.ActivateMod)
             {
                 Instance.CompletionCount++;
                 if (Instance.CompletionCount < Settings.NumberOfCompletions)
                 {
                     Player p = level.Tracker.GetEntity<Player>();
+                    Instance.DeathCausedByMod = true;
                     p.Die(p.Position, true, false);
                 }
-                else if (Instance.CompletionCount == Settings.NumberOfCompletions)
+                else
                 {
                     Instance.CompletionCount = 0;
                 }
+                display.SetDisplayText(Instance.CompletionCount.ToString() + "/" + Settings.NumberOfCompletions.ToString());
             }
         }
-            
+
+        private void ResetUponDeath(Player player)
+        {
+            if(!Instance.DeathCausedByMod)
+            {
+                Instance.CompletionCount = 0;
+            }
+            Instance.DeathCausedByMod = false;
+            display.SetDisplayText(Instance.CompletionCount.ToString() + "/" + Settings.NumberOfCompletions.ToString());
+        }
     }
 }

@@ -9,11 +9,13 @@ namespace Celeste.Mod.Example
         // modoptions_[typename without settings]_[propname]
 
         // Example ON / OFF property with a default value.
-        public bool ModActivate { get; set; } = false;
+        public bool ActivateMod { get; set; } = false;
 
         [SettingRange(1, 10)]
         public int NumberOfCompletions { get; set; } = 5;
 
+        // TODO: Implement this
+        //public bool SkipCutscencesAutomatically = true;
 
     }
 }
