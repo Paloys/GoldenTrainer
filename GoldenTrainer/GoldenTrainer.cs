@@ -45,15 +45,15 @@ namespace GoldenTrainer
             On.Celeste.LevelLoader.LoadingThread += (orig, self) =>
             {
                 orig(self);
+                display = new CompleteDisplay(self.Level);
                 if (Settings.ActivateMod)
                 {
-                    self.Level.Add(display = new CompleteDisplay(self.Level));
+                    self.Level.Add(display);
                     display.SetDisplayText(Instance.CompletionCount.ToString() + "/" + Settings.NumberOfCompletions.ToString());
                 }
                 level = self.Level;
             };
         }
-
 
 
         // Optional, initialize anything after Celeste has initialized itself properly.

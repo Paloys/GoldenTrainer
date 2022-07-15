@@ -15,6 +15,9 @@ namespace GoldenTrainer
         [SettingRange(1, 10)]
         public int NumberOfCompletions { get; set; } = 5;
 
+        [DefaultButtonBinding(0, Keys.M)]
+        public ButtonBinding ActivateButton { get; set; } = new ButtonBinding(0, Keys.M);
+
         // TODO: Implement this
         //public bool SkipCutscencesAutomatically = true;
 

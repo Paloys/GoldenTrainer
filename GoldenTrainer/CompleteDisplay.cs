@@ -10,7 +10,7 @@ namespace GoldenTrainer
         private const float TextPadRight = 6;
 
         private readonly MTexture _bg;
-        private readonly MTexture _skull;
+        private readonly MTexture _berry;
         private readonly MTexture _x;
         private readonly Level _level;
 
@@ -26,18 +26,7 @@ namespace GoldenTrainer
 
             var mode = _level.Session.Area.Mode;
 
-            if (mode == AreaMode.Normal)
-            {
-                _skull = GFX.Gui["collectables/skullBlue"];
-            }
-            else if (mode == AreaMode.BSide)
-            {
-                _skull = GFX.Gui["collectables/skullRed"];
-            }
-            else
-            {
-                _skull = GFX.Gui["collectables/skullGold"];
-            }
+            _berry = GFX.Gui["collectables/goldberry"];
 
             _x = GFX.Gui["x"];
 
@@ -74,6 +63,13 @@ namespace GoldenTrainer
 
         public override void Update()
         {
+
+            if (GoldenTrainerModule.Settings.ActivateButton.Pressed)
+            {
+                GoldenTrainerModule.Instance.CompletionCount = 0;
+                GoldenTrainerModule.Settings.ActivateMod = !GoldenTrainerModule.Settings.ActivateMod;
+            }
+
             base.Update();
 
             Y = Calc.Approach(Y, GetYPosition(), Engine.DeltaTime * 800f);
@@ -100,7 +96,7 @@ namespace GoldenTrainer
                 {
                     Draw.Rect(0, Y, _width - _bg.Width + basePos.X, 38f, Color.Black);
                 }
-                _skull.Draw(new Vector2(basePos.X + 26, Y - 24));
+                _berry.Draw(new Vector2(basePos.X, Y - 40));
                 _x.Draw(new Vector2(basePos.X + 94, Y - 15));
 
                 ActiveFont.DrawOutline(_text, new Vector2(basePos.X + TextPadLeft, Y - 25f), Vector2.Zero, Vector2.One, Color.White, 2f, Color.Black);
