@@ -86,7 +86,8 @@ namespace GoldenTrainer
 
         public override void Render()
         {
-            if (GoldenTrainerModule.Settings.ActivateMod) {
+            if (GoldenTrainerModule.Settings.ActivateMod)
+            {
                 var basePos = Vector2.Lerp(new Vector2(0 - _width, Y), new Vector2(0, Y), Ease.CubeOut(_lerp)).Round();
 
                 _bg.Draw(new Vector2(_width - _bg.Width + basePos.X, Y));

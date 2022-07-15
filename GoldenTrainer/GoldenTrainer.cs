@@ -1,8 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Celeste;
+using Celeste.Mod;
+using Microsoft.Xna.Framework;
 using Monocle;
 using System;
-using Celeste;
-using Celeste.Mod;
 
 
 namespace GoldenTrainer

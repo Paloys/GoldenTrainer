@@ -1,6 +1,5 @@
-﻿using Microsoft.Xna.Framework.Input;
-using YamlDotNet.Serialization;
-using Celeste.Mod;
+﻿using Celeste.Mod;
+using Microsoft.Xna.Framework.Input;
 
 namespace GoldenTrainer
 {
