@@ -1,17 +1,18 @@
-﻿using GoldenTrainer;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Monocle;
 using System;
+using Celeste;
+using Celeste.Mod;
 
 
-namespace Celeste.Mod.Example
+namespace GoldenTrainer
 {
-    public class GoldenTrainer : EverestModule
+    public class GoldenTrainerModule : EverestModule
     {
         // Only one alive module instance can exist at any given time.
-        public static GoldenTrainer Instance;
+        public static GoldenTrainerModule Instance;
 
-        public GoldenTrainer()
+        public GoldenTrainerModule()
         {
             Instance = this;
         }
@@ -44,13 +45,16 @@ namespace Celeste.Mod.Example
             On.Celeste.LevelLoader.LoadingThread += (orig, self) =>
             {
                 orig(self);
-                self.Level.Add(display = new CompleteDisplay(self.Level));
-                display.SetDisplayText(Instance.CompletionCount.ToString() + "/" + Settings.NumberOfCompletions.ToString());
+                if (Settings.ActivateMod)
+                {
+                    self.Level.Add(display = new CompleteDisplay(self.Level));
+                    display.SetDisplayText(Instance.CompletionCount.ToString() + "/" + Settings.NumberOfCompletions.ToString());
+                }
                 level = self.Level;
             };
         }
 
-        
+
 
         // Optional, initialize anything after Celeste has initialized itself properly.
         public override void Initialize()
@@ -67,8 +71,8 @@ namespace Celeste.Mod.Example
         {
             if (Settings.ActivateMod)
             {
-                Instance.CompletionCount++;
-                if (Instance.CompletionCount < Settings.NumberOfCompletions)
+                CompletionCount++;
+                if (CompletionCount < Settings.NumberOfCompletions)
                 {
                     Player p = level.Tracker.GetEntity<Player>();
                     Instance.DeathCausedByMod = true;
@@ -76,20 +80,23 @@ namespace Celeste.Mod.Example
                 }
                 else
                 {
-                    Instance.CompletionCount = 0;
+                    CompletionCount = 0;
                 }
-                display.SetDisplayText(Instance.CompletionCount.ToString() + "/" + Settings.NumberOfCompletions.ToString());
+                display.SetDisplayText(CompletionCount.ToString() + "/" + Settings.NumberOfCompletions.ToString());
             }
         }
 
         private void ResetUponDeath(Player player)
         {
-            if(!Instance.DeathCausedByMod)
+            if (Settings.ActivateMod)
             {
-                Instance.CompletionCount = 0;
+                if (!DeathCausedByMod)
+                {
+                    CompletionCount = 0;
+                }
+                DeathCausedByMod = false;
+                display.SetDisplayText(CompletionCount.ToString() + "/" + Settings.NumberOfCompletions.ToString());
             }
-            Instance.DeathCausedByMod = false;
-            display.SetDisplayText(Instance.CompletionCount.ToString() + "/" + Settings.NumberOfCompletions.ToString());
         }
     }
 }

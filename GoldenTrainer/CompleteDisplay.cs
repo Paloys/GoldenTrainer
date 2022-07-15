@@ -90,20 +90,21 @@ namespace GoldenTrainer
 
         public override void Render()
         {
-            var basePos = Vector2.Lerp(new Vector2(0 - _width, Y), new Vector2(0, Y), Ease.CubeOut(_lerp)).Round();
+            if (GoldenTrainerModule.Settings.ActivateMod) {
+                var basePos = Vector2.Lerp(new Vector2(0 - _width, Y), new Vector2(0, Y), Ease.CubeOut(_lerp)).Round();
 
-            _bg.Draw(new Vector2(_width - _bg.Width + basePos.X, Y));
+                _bg.Draw(new Vector2(_width - _bg.Width + basePos.X, Y));
 
 
-            if (_width > _bg.Width + basePos.X)
-            {
-                Draw.Rect(0, Y, _width - _bg.Width + basePos.X, 38f, Color.Black);
+                if (_width > _bg.Width + basePos.X)
+                {
+                    Draw.Rect(0, Y, _width - _bg.Width + basePos.X, 38f, Color.Black);
+                }
+                _skull.Draw(new Vector2(basePos.X + 26, Y - 24));
+                _x.Draw(new Vector2(basePos.X + 94, Y - 15));
+
+                ActiveFont.DrawOutline(_text, new Vector2(basePos.X + TextPadLeft, Y - 25f), Vector2.Zero, Vector2.One, Color.White, 2f, Color.Black);
             }
-
-            _skull.Draw(new Vector2(basePos.X + 26, Y - 24));
-            _x.Draw(new Vector2(basePos.X + 94, Y - 15));
-
-            ActiveFont.DrawOutline(_text, new Vector2(basePos.X + TextPadLeft, Y - 25f), Vector2.Zero, Vector2.One, Color.White, 2f, Color.Black);
         }
     }
 }

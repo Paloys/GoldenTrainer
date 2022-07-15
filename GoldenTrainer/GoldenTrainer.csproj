@@ -79,7 +79,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Dialog\English.txt" />
-    <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,7 +1,8 @@
 ﻿using Microsoft.Xna.Framework.Input;
 using YamlDotNet.Serialization;
+using Celeste.Mod;
 
-namespace Celeste.Mod.Example
+namespace GoldenTrainer
 {
     public class ExampleModuleSettings : EverestModuleSettings
     {
