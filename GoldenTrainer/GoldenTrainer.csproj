@@ -72,7 +72,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CompleteDisplay.cs" />
+    <Compile Include="CompletionDisplay.cs" />
     <Compile Include="ExampleModuleSettings.cs" />
     <Compile Include="GoldenTrainer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

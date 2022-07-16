@@ -4,7 +4,7 @@ using Monocle;
 
 namespace GoldenTrainer
 {
-    public class CompleteDisplay : Entity
+    public class CompletionDisplay : Entity
     {
         private const float TextPadLeft = 144;
         private const float TextPadRight = 6;
@@ -19,7 +19,9 @@ namespace GoldenTrainer
 
         private float _width;
 
-        public CompleteDisplay(Level level)
+ 
+
+        public CompletionDisplay(Level level)
         {
             _level = level;
             _bg = GFX.Gui["strawberryCountBG"];
@@ -68,11 +70,18 @@ namespace GoldenTrainer
             {
                 GoldenTrainerModule.Instance.CompletionCount = 0;
                 GoldenTrainerModule.Settings.ActivateMod = !GoldenTrainerModule.Settings.ActivateMod;
+                this.Visible = GoldenTrainerModule.Settings.ActivateMod;
             }
 
             base.Update();
 
             Y = Calc.Approach(Y, GetYPosition(), Engine.DeltaTime * 800f);
+
+
+
+
+
+
 
             if (!_level.Paused)
             {
@@ -86,22 +95,20 @@ namespace GoldenTrainer
 
         public override void Render()
         {
-            if (GoldenTrainerModule.Settings.ActivateMod)
+            this.Visible = GoldenTrainerModule.Settings.ActivateMod;
+            var basePos = Vector2.Lerp(new Vector2(0 - _width, Y), new Vector2(0, Y), Ease.CubeOut(_lerp)).Round();
+
+            _bg.Draw(new Vector2(_width - _bg.Width + basePos.X, Y));
+
+
+            if (_width > _bg.Width + basePos.X)
             {
-                var basePos = Vector2.Lerp(new Vector2(0 - _width, Y), new Vector2(0, Y), Ease.CubeOut(_lerp)).Round();
-
-                _bg.Draw(new Vector2(_width - _bg.Width + basePos.X, Y));
-
-
-                if (_width > _bg.Width + basePos.X)
-                {
-                    Draw.Rect(0, Y, _width - _bg.Width + basePos.X, 38f, Color.Black);
-                }
-                _berry.Draw(new Vector2(basePos.X, Y - 40));
-                _x.Draw(new Vector2(basePos.X + 94, Y - 15));
-
-                ActiveFont.DrawOutline(_text, new Vector2(basePos.X + TextPadLeft, Y - 25f), Vector2.Zero, Vector2.One, Color.White, 2f, Color.Black);
+                Draw.Rect(0, Y, _width - _bg.Width + basePos.X, 38f, Color.Black);
             }
+            _berry.Draw(new Vector2(basePos.X, Y - 40));
+            _x.Draw(new Vector2(basePos.X + 94, Y - 15));
+
+            ActiveFont.DrawOutline(_text, new Vector2(basePos.X + TextPadLeft, Y - 25f), Vector2.Zero, Vector2.One, Color.White, 2f, Color.Black);
         }
     }
 }

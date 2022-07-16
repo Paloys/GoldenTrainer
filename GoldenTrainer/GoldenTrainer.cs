@@ -21,11 +21,21 @@ namespace GoldenTrainer
         public override Type SettingsType => typeof(ExampleModuleSettings);
         public static ExampleModuleSettings Settings => (ExampleModuleSettings)Instance._Settings;
 
-        public int CompletionCount { get; set; } = 0;
-
         private bool DeathCausedByMod { get; set; } = false;
 
-        public CompleteDisplay display = null;
+        private int _completionCount = 0;
+
+        public int CompletionCount
+        {
+            get { return _completionCount; }
+            set
+            {
+                _completionCount = value;
+                display.SetDisplayText(_completionCount + "/" + GoldenTrainerModule.Settings.NumberOfCompletions.ToString());
+            }
+        }
+
+        public CompletionDisplay display = null;
         public Level level = null;
 
         // Initialized in LoadContent, after graphics and other assets have been loaded.
@@ -45,12 +55,10 @@ namespace GoldenTrainer
             On.Celeste.LevelLoader.LoadingThread += (orig, self) =>
             {
                 orig(self);
-                display = new CompleteDisplay(self.Level);
-                if (Settings.ActivateMod)
-                {
-                    self.Level.Add(display);
-                    display.SetDisplayText(Instance.CompletionCount.ToString() + "/" + Settings.NumberOfCompletions.ToString());
-                }
+                display = new CompletionDisplay(self.Level);
+                self.Level.Add(display);
+                display.SetDisplayText(CompletionCount.ToString() + "/" + Settings.NumberOfCompletions.ToString());
+                display.Visible = Settings.ActivateMod;
                 level = self.Level;
             };
         }
@@ -82,7 +90,6 @@ namespace GoldenTrainer
                 {
                     CompletionCount = 0;
                 }
-                display.SetDisplayText(CompletionCount.ToString() + "/" + Settings.NumberOfCompletions.ToString());
             }
         }
 
@@ -95,7 +102,6 @@ namespace GoldenTrainer
                     CompletionCount = 0;
                 }
                 DeathCausedByMod = false;
-                display.SetDisplayText(CompletionCount.ToString() + "/" + Settings.NumberOfCompletions.ToString());
             }
         }
     }
