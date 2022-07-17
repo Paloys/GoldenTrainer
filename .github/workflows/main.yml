@@ -7,13 +7,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
     - name: List files
       run: |
         ls .
         ls ./GoldenTrainer
     - name: Move Dialog folder
-      run: mv ./GoldenTrainer/Dialog . 
-    - uses: actions/checkout@v2
+      run: mv ./GoldenTrainer/Dialog .
     - name: Create Release Folder
       run: rsync -arv --exclude='.git/' --exclude=".git/*" --exclude=".github/*" --exclude=".gitattributes" --exclude=".gitignore" --exclude="README.md" . ./release
     - name: Switch to Release Folder
