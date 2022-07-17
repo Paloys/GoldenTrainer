@@ -1,4 +1,4 @@
-name: MasterDeployCI
+name: AutoZipAndRelease
 on:
   push:
     branches:
@@ -7,8 +7,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - name: Zip Folder
-      run: zip -r release.zip .
-    - name: Release to Github
-      run: echo "Release"
+    - name: Move Dialog folder
+      run: mv ./GoldenTrainer/Dialog . 
+    - uses: actions/checkout@v2
+    - name: Create Release Folder
+      run: rsync -arv --exclude='.git/' --exclude=".git/*" --exclude=".github/*" --exclude=".gitattributes" --exclude=".gitignore" --exclude="README.md" . ./release
+    - name: Switch to Release Folder
+      run: |
+        cd release
+        ls -la
+    - name: Bump version and push tag
+      uses: anothrNick/github-tag-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        REPO_OWNER: Paloys
