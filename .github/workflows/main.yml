@@ -26,3 +26,5 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
         REPO_OWNER: Paloys
         WITH_V: true
+        RELEASE_BRANCHES: master
+        DEFAULT_BUMP: patch
