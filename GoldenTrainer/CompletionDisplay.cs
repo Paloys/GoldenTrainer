@@ -19,7 +19,7 @@ namespace GoldenTrainer
 
         private float _width;
 
- 
+
 
         public CompletionDisplay(Level level)
         {
@@ -73,15 +73,23 @@ namespace GoldenTrainer
                 this.Visible = GoldenTrainerModule.Settings.ActivateMod;
             }
 
+            if (GoldenTrainerModule.Settings.ActivateMod)
+            {
+                if (GoldenTrainerModule.Settings.IncrementButton.Pressed && GoldenTrainerModule.Settings.NumberOfCompletions < 10)
+                {
+                    GoldenTrainerModule.Settings.NumberOfCompletions++;
+                    /// GoldenTrainerModule.Instance.display.SetDisplayText(GoldenTrainerModule.Instance.CompletionCount.ToString() + "/" + GoldenTrainerModule.Settings.NumberOfCompletions.ToString());
+                }
+
+                else if (GoldenTrainerModule.Settings.DecrementButton.Pressed && GoldenTrainerModule.Settings.NumberOfCompletions > 2)
+                {
+                    GoldenTrainerModule.Settings.NumberOfCompletions--;
+                }
+            }
+            
             base.Update();
 
             Y = Calc.Approach(Y, GetYPosition(), Engine.DeltaTime * 800f);
-
-
-
-
-
-
 
             if (!_level.Paused)
             {

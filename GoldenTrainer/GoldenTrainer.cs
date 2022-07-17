@@ -31,7 +31,7 @@ namespace GoldenTrainer
             set
             {
                 _completionCount = value;
-                display.SetDisplayText(_completionCount + "/" + GoldenTrainerModule.Settings.NumberOfCompletions.ToString());
+                display.SetDisplayText(_completionCount + "/" + Settings.NumberOfCompletions);
             }
         }
 
@@ -55,12 +55,12 @@ namespace GoldenTrainer
             On.Celeste.LevelLoader.LoadingThread += (orig, self) =>
             {
                 orig(self);
-                display = new CompletionDisplay(self.Level);
-                self.Level.Add(display);
-                display.SetDisplayText(CompletionCount.ToString() + "/" + Settings.NumberOfCompletions.ToString());
+                self.Level.Add(display = new CompletionDisplay(self.Level));
+                display.SetDisplayText(CompletionCount + "/" + Settings.NumberOfCompletions);
                 display.Visible = Settings.ActivateMod;
                 level = self.Level;
             };
+            
         }
 
 
@@ -89,6 +89,7 @@ namespace GoldenTrainer
                 else
                 {
                     CompletionCount = 0;
+                    Audio.Play(SFX.ui_game_increment_strawberry);
                 }
             }
         }

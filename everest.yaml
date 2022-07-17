@@ -1,5 +1,5 @@
 ﻿- Name: GoldenTrainer
-  Version: 1.0.0
+  Version: 1.1.2
   DLL: GoldenTrainer/bin/x86/Debug/GoldenTrainer.dll
   Dependencies:
     - Name: Everest

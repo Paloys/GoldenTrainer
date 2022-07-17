@@ -9,7 +9,6 @@ Once you have installed the mod via the Everest/Olympus launcher, you can setup 
 - The required number of completions before switching to another screen.
 
 ### Todo :
-- Change the skull icon by another one, I stole the code from [here](https://github.com/FakeDomi/DeathTracker), kudos to FakeDomi for making that open-source !
 - Add something to prevent accidental room changes
 - Add support for the end of B and C-sides, and also 8A (every level finishing by a heart).
 
