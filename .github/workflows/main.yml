@@ -8,7 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: List files
-      run: ls -la
+      run: |
+        ls .
+        ls ./GoldenTrainer
     - name: Move Dialog folder
       run: mv ./GoldenTrainer/Dialog . 
     - uses: actions/checkout@v2
