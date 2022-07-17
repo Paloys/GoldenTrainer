@@ -21,7 +21,7 @@ jobs:
         cd release
         ls -la
     - name: Bump version and push tag
-      uses: anothrNick/github-tag-action@master
+      uses: alexeyatbluescape/github-tag-action@bugfix/semver-empty-results
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
         REPO_OWNER: Paloys
