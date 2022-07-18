@@ -107,7 +107,7 @@ namespace GoldenTrainer
         }
 
         private void RespawnAtEndCrystal(On.Celeste.HeartGem.orig_Collect orig, HeartGem self, Player player) {
-            if (Settings.ActivateMod)
+            if (Settings.ActivateMod && !self.IsFake)
             {
                 CompletionCount++;
                 if (CompletionCount < Settings.NumberOfCompletions)
