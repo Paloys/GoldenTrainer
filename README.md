@@ -10,7 +10,6 @@ Once you have installed the mod via the Everest/Olympus launcher, you can setup 
 
 ### Todo :
 - Add something to prevent accidental room changes
-- Add support for the end of B and C-sides, and also 8A (every level finishing by a heart).
 
 ### Contact me :
 I'm on the [official Celeste discord server](https://discord.gg/6qjaePQ) as Paloys#7527, feel free to dm me if you have a question !
