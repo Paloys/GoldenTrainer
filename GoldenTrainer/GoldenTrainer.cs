@@ -60,7 +60,7 @@ namespace GoldenTrainer
                 display.Visible = Settings.ActivateMod;
                 level = self.Level;
             };
-            
+            On.Celeste.HeartGem.Collect += RespawnAtEndCrystal;
         }
 
 
@@ -104,6 +104,24 @@ namespace GoldenTrainer
                 }
                 DeathCausedByMod = false;
             }
+        }
+
+        private void RespawnAtEndCrystal(On.Celeste.HeartGem.orig_Collect orig, HeartGem self, Player player) {
+            if (Settings.ActivateMod)
+            {
+                CompletionCount++;
+                if (CompletionCount < Settings.NumberOfCompletions)
+                {
+                    Instance.DeathCausedByMod = true;
+                    player.Die(player.Position, true, false);
+                }
+                else
+                {
+                    CompletionCount = 0;
+                    Audio.Play(SFX.ui_game_increment_strawberry);
+                }
+            }
+            orig(self, player);
         }
     }
 }
