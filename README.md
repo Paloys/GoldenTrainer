@@ -9,7 +9,7 @@ Once you have installed the mod via the Everest/Olympus launcher, you can setup 
 - The required number of completions before switching to another screen.
 
 ### Todo :
-- Add something to prevent accidental room changes
+- Implement Summit checkpoints, because the mod currently only works with Crystal Hearts and room transitions
 
 ### Contact me :
 I'm on the [official Celeste discord server](https://discord.gg/6qjaePQ) as Paloys#7527, feel free to dm me if you have a question !

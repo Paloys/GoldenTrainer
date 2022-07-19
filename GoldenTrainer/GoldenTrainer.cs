@@ -89,7 +89,7 @@ namespace GoldenTrainer
                 else
                 {
                     CompletionCount = 0;
-                    Audio.Play(SFX.ui_game_increment_strawberry);
+                    Audio.Play(SFX.game_07_checkpointconfetti);
                 }
             }
         }
@@ -106,7 +106,8 @@ namespace GoldenTrainer
             }
         }
 
-        private void RespawnAtEndCrystal(On.Celeste.HeartGem.orig_Collect orig, HeartGem self, Player player) {
+        private void RespawnAtEndCrystal(On.Celeste.HeartGem.orig_Collect orig, HeartGem self, Player player)
+        {
             if (Settings.ActivateMod && !self.IsFake)
             {
                 CompletionCount++;
@@ -118,7 +119,7 @@ namespace GoldenTrainer
                 else
                 {
                     CompletionCount = 0;
-                    Audio.Play(SFX.ui_game_increment_strawberry);
+                    Audio.Play(SFX.game_07_checkpointconfetti);
                 }
             }
             orig(self, player);

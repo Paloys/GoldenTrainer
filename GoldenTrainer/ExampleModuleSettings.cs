@@ -20,7 +20,7 @@ namespace GoldenTrainer
             set
             {
                 _numberOfCompletions = value;
-                GoldenTrainerModule.Instance.display.SetDisplayText(GoldenTrainerModule.Instance.CompletionCount + "/" + _numberOfCompletions);
+                GoldenTrainerModule.Instance.display?.SetDisplayText(GoldenTrainerModule.Instance.CompletionCount + "/" + _numberOfCompletions);
             }
         }
 
