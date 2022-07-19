@@ -35,6 +35,8 @@ namespace GoldenTrainer
             }
         }
 
+        private int latestSummitCheckpoint = -1;
+
         public CompletionDisplay display = null;
         public Level level = null;
 
@@ -61,6 +63,8 @@ namespace GoldenTrainer
                 level = self.Level;
             };
             On.Celeste.HeartGem.Collect += RespawnAtEndCrystal;
+            On.Celeste.ChangeRespawnTrigger.OnEnter += RespawnAtEndTrigger;
+            On.Celeste.SummitCheckpoint.Update += RespawnAtEndSummitCheckpoint;
         }
 
 
@@ -113,7 +117,7 @@ namespace GoldenTrainer
                 CompletionCount++;
                 if (CompletionCount < Settings.NumberOfCompletions)
                 {
-                    Instance.DeathCausedByMod = true;
+                    DeathCausedByMod = true;
                     player.Die(player.Position, true, false);
                 }
                 else
@@ -123,6 +127,49 @@ namespace GoldenTrainer
                 }
             }
             orig(self, player);
+        }
+        
+        private void RespawnAtEndTrigger(On.Celeste.ChangeRespawnTrigger.orig_OnEnter orig, ChangeRespawnTrigger self, Player p)
+        {
+            if (Settings.ActivateMod && self.Target != level.Session.RespawnPoint)
+            {
+                CompletionCount++;
+                if (CompletionCount < Settings.NumberOfCompletions)
+                {
+                    DeathCausedByMod = true;
+                    p.Die(p.Position, true, false);
+                }
+                else
+                {
+                    CompletionCount = 0;
+                    Audio.Play(SFX.game_07_checkpointconfetti);
+                    orig(self, p);
+                }
+            }
+            else
+            {
+                orig(self, p);
+            }
+        }
+
+        private void RespawnAtEndSummitCheckpoint(On.Celeste.SummitCheckpoint.orig_Update orig, SummitCheckpoint self)
+        {
+            Player p = level.Tracker.GetEntity<Player>();
+            if (Settings.ActivateMod && !self.Activated && self.CollideCheck<Player>() && latestSummitCheckpoint != self.Number && p.OnGround() && p.Speed.Y >= 0f)
+            {
+                CompletionCount++;
+                if (CompletionCount < Settings.NumberOfCompletions)
+                {
+                    DeathCausedByMod = true;
+                    p.Die(p.Position, true, false);
+                }
+                else
+                {
+                    latestSummitCheckpoint = self.Number; /// Check because for some reason it triggers twice ???
+                    CompletionCount = 0;
+                }
+            }
+            orig(self);
         }
     }
 }
