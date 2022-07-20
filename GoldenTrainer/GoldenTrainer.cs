@@ -40,6 +40,8 @@ namespace GoldenTrainer
         public CompletionDisplay display = null;
         public Level level = null;
 
+        public Session.CoreModes coreMode = Session.CoreModes.None;
+
         // Initialized in LoadContent, after graphics and other assets have been loaded.
         public SpriteBank ExampleSpriteBank;
 
@@ -52,7 +54,7 @@ namespace GoldenTrainer
             Logger.Log(LogLevel.Info, "GoldenTrainer", "Loading GoldenTrainer Hooks");
             // The default LogLevel when using Logger.Log is Verbose.
             Logger.Log(LogLevel.Verbose, "GoldenTrainer", "This line would not be logged with SetLogLevel LogLevel.Info");
-            Everest.Events.Level.OnTransitionTo += RespawnAtEnd;
+            On.Celeste.Level.TransitionTo += RespawnAtEnd;
             Everest.Events.Player.OnDie += ResetUponDeath;
             On.Celeste.LevelLoader.LoadingThread += (orig, self) =>
             {
@@ -79,14 +81,14 @@ namespace GoldenTrainer
 
         }
 
-        private void RespawnAtEnd(Level level, LevelData next, Vector2 direction)
+        private void RespawnAtEnd(On.Celeste.Level.orig_TransitionTo orig, Level self, LevelData next, Vector2 direction)
         {
             if (Settings.ActivateMod)
             {
                 CompletionCount++;
                 if (CompletionCount < Settings.NumberOfCompletions)
                 {
-                    Player p = level.Tracker.GetEntity<Player>();
+                    Player p = self.Tracker.GetEntity<Player>();
                     Instance.DeathCausedByMod = true;
                     p.Die(p.Position, true, false);
                 }
@@ -94,7 +96,13 @@ namespace GoldenTrainer
                 {
                     CompletionCount = 0;
                     Audio.Play(SFX.game_07_checkpointconfetti);
+                    coreMode = level.CoreMode;
+                    orig(self, next, direction);
                 }
+            }
+            else
+            {
+                orig(self, next, direction);
             }
         }
 
@@ -105,6 +113,10 @@ namespace GoldenTrainer
                 if (!DeathCausedByMod)
                 {
                     CompletionCount = 0;
+                }
+                else
+                {
+                    level.CoreMode = coreMode;
                 }
                 DeathCausedByMod = false;
             }
