@@ -1,7 +1,9 @@
 ﻿using Celeste;
 using Celeste.Mod;
 using Microsoft.Xna.Framework;
+using Mono.Cecil.Cil;
 using Monocle;
+using MonoMod.Cil;
 using System;
 
 
@@ -35,12 +37,13 @@ namespace GoldenTrainer
             }
         }
 
-        private int latestSummitCheckpoint = -1;
 
         public CompletionDisplay display = null;
         public Level level = null;
 
         public Session.CoreModes coreMode = Session.CoreModes.None;
+
+        private int latestSummitCheckpointTriggered = -1;
 
         // Initialized in LoadContent, after graphics and other assets have been loaded.
         public SpriteBank ExampleSpriteBank;
@@ -53,7 +56,6 @@ namespace GoldenTrainer
             Logger.SetLogLevel("GoldenTrainer", LogLevel.Verbose);
             Logger.Log(LogLevel.Info, "GoldenTrainer", "Loading GoldenTrainer Hooks");
             // The default LogLevel when using Logger.Log is Verbose.
-            Logger.Log(LogLevel.Verbose, "GoldenTrainer", "This line would not be logged with SetLogLevel LogLevel.Info");
             On.Celeste.Level.TransitionTo += RespawnAtEnd;
             Everest.Events.Player.OnDie += ResetUponDeath;
             On.Celeste.LevelLoader.LoadingThread += (orig, self) =>
@@ -66,7 +68,7 @@ namespace GoldenTrainer
             };
             On.Celeste.HeartGem.Collect += RespawnAtEndCrystal;
             On.Celeste.ChangeRespawnTrigger.OnEnter += RespawnAtEndTrigger;
-            On.Celeste.SummitCheckpoint.Update += RespawnAtEndSummitCheckpoint;
+            IL.Celeste.SummitCheckpoint.Update += SummitCheckpointHandler;
         }
 
 
@@ -78,7 +80,7 @@ namespace GoldenTrainer
         // Unload the entirety of your mod's content. Free up any native resources.
         public override void Unload()
         {
-
+            IL.Celeste.SummitCheckpoint.Update -= SummitCheckpointHandler;
         }
 
         private void RespawnAtEnd(On.Celeste.Level.orig_TransitionTo orig, Level self, LevelData next, Vector2 direction)
@@ -164,24 +166,42 @@ namespace GoldenTrainer
             }
         }
 
-        private void RespawnAtEndSummitCheckpoint(On.Celeste.SummitCheckpoint.orig_Update orig, SummitCheckpoint self)
+        private void SummitCheckpointHandler(ILContext il)
         {
-            Player p = level.Tracker.GetEntity<Player>();
-            if (Settings.ActivateMod && !self.Activated && self.CollideCheck<Player>() && latestSummitCheckpoint != self.Number && p.OnGround() && p.Speed.Y >= 0f)
+            ILCursor cursor = new ILCursor(il);
+            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Entity>("get_Scene"), instr => instr.MatchIsinst<Level>()))
             {
-                CompletionCount++;
-                if (CompletionCount < Settings.NumberOfCompletions)
+                ILLabel labelEnd = cursor.DefineLabel();
+                ILLabel labelNext = cursor.DefineLabel();
+                Logger.Log(LogLevel.Info, "GoldenTrainer", "Adding IL hook for SummitCheckpoint.Update()");
+                cursor.Emit(OpCodes.Ldloc_0); // Load Player into stack
+                cursor.Emit(OpCodes.Ldarg_0); // Load self into stack
+                cursor.EmitDelegate<Func<Player, SummitCheckpoint, bool>>(SummitCheckpointUpdateHook); // Run SummitCheckpointUpdateHook and Add Instance.CompletionCount < Settings.NumberOfCompletions to the stack
+                cursor.Emit(OpCodes.Brfalse, labelNext); // Jump past pop and Br
+                cursor.Emit(OpCodes.Pop); // Pop the scene if we jump to end
+                cursor.Emit(OpCodes.Br, labelEnd); // Jump to end if Instance.CompletionCount < Settings.NumberOfCompletions
+                cursor.MarkLabel(labelNext); // Mark Next label to skip pop and Br
+                cursor.GotoNext(MoveType.Before, instr => instr.MatchRet()).MarkLabel(labelEnd); // Jump to the end of the function to mark the label
+                Logger.Log(LogLevel.Info, "GoldenTrainer", "Added IL hook for SummitCheckpoint.Update()");
+            }
+        }
+
+        private static bool SummitCheckpointUpdateHook(Player p, SummitCheckpoint self)
+        {
+            if (Instance.latestSummitCheckpointTriggered != self.Number) {
+                Instance.CompletionCount++;
+                if (Instance.CompletionCount < Settings.NumberOfCompletions)
                 {
-                    DeathCausedByMod = true;
+                    Instance.DeathCausedByMod = true;
                     p.Die(p.Position, true, false);
                 }
                 else
                 {
-                    latestSummitCheckpoint = self.Number; /// Check because for some reason it triggers twice ???
-                    CompletionCount = 0;
+                    Instance.CompletionCount = 0;
+                    Instance.latestSummitCheckpointTriggered = self.Number; // Check because for some reason it triggers twice ???
                 }
             }
-            orig(self);
+            return Instance.CompletionCount < Settings.NumberOfCompletions && Instance.latestSummitCheckpointTriggered != self.Number;
         }
     }
 }
