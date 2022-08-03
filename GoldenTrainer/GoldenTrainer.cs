@@ -69,6 +69,7 @@ namespace GoldenTrainer
             On.Celeste.HeartGem.Collect += RespawnAtEndCrystal;
             On.Celeste.ChangeRespawnTrigger.OnEnter += RespawnAtEndTrigger;
             IL.Celeste.SummitCheckpoint.Update += SummitCheckpointHandler;
+            On.Celeste.Session.Restart += OnSessionRestart;
         }
 
 
@@ -176,8 +177,8 @@ namespace GoldenTrainer
                 Logger.Log(LogLevel.Info, "GoldenTrainer", "Adding IL hook for SummitCheckpoint.Update()");
                 cursor.Emit(OpCodes.Ldloc_0); // Load Player into stack
                 cursor.Emit(OpCodes.Ldarg_0); // Load self into stack
-                cursor.EmitDelegate<Func<Player, SummitCheckpoint, bool>>(SummitCheckpointUpdateHook); // Run SummitCheckpointUpdateHook and Add Instance.CompletionCount < Settings.NumberOfCompletions to the stack
-                cursor.Emit(OpCodes.Brfalse, labelNext); // Jump past pop and Br
+                cursor.EmitDelegate<Func<Player, SummitCheckpoint, bool>>(SummitCheckpointUpdateHook); // Run SummitCheckpointUpdateHook and add Instance.CompletionCount < Settings.NumberOfCompletions && Instance.latestSummitCheckpointTriggered != self.Number && Settings.ActivateMod to the stack
+                cursor.Emit(OpCodes.Brfalse, labelNext); // Jump past pop and Br if the returned bool is false
                 cursor.Emit(OpCodes.Pop); // Pop the scene if we jump to end
                 cursor.Emit(OpCodes.Br, labelEnd); // Jump to end if Instance.CompletionCount < Settings.NumberOfCompletions
                 cursor.MarkLabel(labelNext); // Mark Next label to skip pop and Br
@@ -188,7 +189,7 @@ namespace GoldenTrainer
 
         private static bool SummitCheckpointUpdateHook(Player p, SummitCheckpoint self)
         {
-            if (Instance.latestSummitCheckpointTriggered != self.Number) {
+            if (Instance.latestSummitCheckpointTriggered != self.Number && Settings.ActivateMod) {
                 Instance.CompletionCount++;
                 if (Instance.CompletionCount < Settings.NumberOfCompletions)
                 {
@@ -201,7 +202,16 @@ namespace GoldenTrainer
                     Instance.latestSummitCheckpointTriggered = self.Number; // Check because for some reason it triggers twice ???
                 }
             }
-            return Instance.CompletionCount < Settings.NumberOfCompletions && Instance.latestSummitCheckpointTriggered != self.Number;
+            return Instance.CompletionCount < Settings.NumberOfCompletions && Instance.latestSummitCheckpointTriggered != self.Number && Settings.ActivateMod;
+        }
+
+        private Session OnSessionRestart(On.Celeste.Session.orig_Restart orig, Session self, string intoLevel = null)
+        {
+            Session session = orig(self, intoLevel);
+            latestSummitCheckpointTriggered = -1;
+            coreMode = Session.CoreModes.None;
+            CompletionCount = 0;
+            return session;
         }
     }
 }
