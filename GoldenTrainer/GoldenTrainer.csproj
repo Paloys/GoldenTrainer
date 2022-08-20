@@ -63,6 +63,9 @@
       <HintPath>..\..\..\MMHOOK_Celeste.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="MonoMod.RuntimeDetour">
+      <HintPath>..\..\..\MonoMod.RuntimeDetour.dll</HintPath>
+    </Reference>
     <Reference Include="MonoMod.Utils">
       <HintPath>..\..\..\MonoMod.Utils.dll</HintPath>
     </Reference>
@@ -76,7 +79,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompletionDisplay.cs" />
-    <Compile Include="ExampleModuleSettings.cs" />
+    <Compile Include="GoldenTrainerSettings.cs" />
     <Compile Include="GoldenTrainer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

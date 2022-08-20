@@ -1,11 +1,13 @@
 ﻿using Celeste;
 using Celeste.Mod;
 using Microsoft.Xna.Framework;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Monocle;
 using MonoMod.Cil;
+using MonoMod.RuntimeDetour;
 using System;
-
+using System.Threading.Tasks;
 
 namespace GoldenTrainer
 {
@@ -20,8 +22,8 @@ namespace GoldenTrainer
         }
 
         // If you need to store settings:
-        public override Type SettingsType => typeof(ExampleModuleSettings);
-        public static ExampleModuleSettings Settings => (ExampleModuleSettings)Instance._Settings;
+        public override Type SettingsType => typeof(GoldenTrainerSettings);
+        public static GoldenTrainerSettings Settings => (GoldenTrainerSettings)Instance._Settings;
 
         private bool DeathCausedByMod { get; set; } = false;
 
@@ -44,6 +46,8 @@ namespace GoldenTrainer
         public Session.CoreModes coreMode = Session.CoreModes.None;
 
         private int latestSummitCheckpointTriggered = -1;
+
+        private ILHook DieGoldenHook = null;
 
         // Initialized in LoadContent, after graphics and other assets have been loaded.
         public SpriteBank ExampleSpriteBank;
@@ -70,6 +74,8 @@ namespace GoldenTrainer
             On.Celeste.ChangeRespawnTrigger.OnEnter += RespawnAtEndTrigger;
             IL.Celeste.SummitCheckpoint.Update += SummitCheckpointHandler;
             On.Celeste.Session.Restart += OnSessionRestart;
+            DieGoldenHook = new ILHook(typeof(Player).GetMethod("orig_Die"), RespawnInRoomWithBerry);
+            On.Celeste.Level.Update += AutoSkipCutscene;
         }
 
 
@@ -82,6 +88,7 @@ namespace GoldenTrainer
         public override void Unload()
         {
             IL.Celeste.SummitCheckpoint.Update -= SummitCheckpointHandler;
+            DieGoldenHook?.Dispose();
         }
 
         private void RespawnAtEnd(On.Celeste.Level.orig_TransitionTo orig, Level self, LevelData next, Vector2 direction)
@@ -212,6 +219,30 @@ namespace GoldenTrainer
             coreMode = Session.CoreModes.None;
             CompletionCount = 0;
             return session;
+        }
+
+        private void RespawnInRoomWithBerry(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdfld(out FieldReference f) && f.Name == "goldenStrawb", instr => instr.OpCode == OpCodes.Brfalse_S))
+            {
+                Logger.Log(LogLevel.Info, "GoldenTrainer", "Adding IL hook for Player.orig_Die()");
+                ILLabel labelEnd = cursor.DefineLabel();
+                cursor.EmitDelegate<Func<bool>>(() => Settings.RespawnOnRoomOnGoldenBerryDeath);
+                cursor.Emit(OpCodes.Brtrue, labelEnd);
+                cursor.GotoNext(MoveType.Before, instr => instr.MatchLdarg(0), instr => instr.MatchCall<Entity>("get_Scene")).MarkLabel(labelEnd);
+                Logger.Log(LogLevel.Info, "GoldenTrainer", "Added IL hook for Player.orig_Die()");
+            }
+        }
+
+        private void AutoSkipCutscene(On.Celeste.Level.orig_Update orig, Level self)
+        {
+            orig(self);
+            if (self.InCutscene && !self.SkippingCutscene && Settings.SkipCutscenesAutomatically)
+            {
+                self.SkipCutscene();
+                Logger.Log(LogLevel.Info, "GoldenTrainer", "Skipping cutscene");
+            }
         }
     }
 }

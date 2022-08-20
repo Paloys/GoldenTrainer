@@ -3,12 +3,9 @@ using Microsoft.Xna.Framework.Input;
 
 namespace GoldenTrainer
 {
-    public class ExampleModuleSettings : EverestModuleSettings
+    public class GoldenTrainerSettings : EverestModuleSettings
     {
-        // SettingName also works on props, defaulting to
-        // modoptions_[typename without settings]_[propname]
 
-        // Example ON / OFF property with a default value.
         public bool ActivateMod { get; set; } = false;
 
         private int _numberOfCompletions = 5;
@@ -33,8 +30,10 @@ namespace GoldenTrainer
         [DefaultButtonBinding(0, Keys.RightShift)]
         public ButtonBinding IncrementButton { get; set; } = new ButtonBinding(0, Keys.RightShift);
 
-        // TODO: Implement this
-        //public bool SkipCutscencesAutomatically = true;
+        [SettingSubText("Activating this will respawn you in the room you died if you carried a Golden Berry\nUseful for immediatly praticing a room that made you fail the Golden!\nNote: This setting still works if Activate Mod is turned off (else it'd be pretty useless)")]
+        public bool RespawnOnRoomOnGoldenBerryDeath { get; set; } = false;
+
+        public bool SkipCutscenesAutomatically { get; set; } = false;
 
     }
 }
