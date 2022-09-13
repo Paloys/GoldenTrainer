@@ -26,8 +26,6 @@ namespace GoldenTrainer
             _level = level;
             _bg = GFX.Gui["strawberryCountBG"];
 
-            var mode = _level.Session.Area.Mode;
-
             _berry = GFX.Gui["collectables/goldberry"];
 
             _x = GFX.Gui["x"];
@@ -70,7 +68,7 @@ namespace GoldenTrainer
             {
                 GoldenTrainerModule.Instance.CompletionCount = 0;
                 GoldenTrainerModule.Settings.ActivateMod = !GoldenTrainerModule.Settings.ActivateMod;
-                this.Visible = GoldenTrainerModule.Settings.ActivateMod;
+                Visible = GoldenTrainerModule.Settings.ActivateMod;
             }
 
             if (GoldenTrainerModule.Settings.ActivateMod)
@@ -78,7 +76,6 @@ namespace GoldenTrainer
                 if (GoldenTrainerModule.Settings.IncrementButton.Pressed && GoldenTrainerModule.Settings.NumberOfCompletions < 10)
                 {
                     GoldenTrainerModule.Settings.NumberOfCompletions++;
-                    /// GoldenTrainerModule.Instance.display.SetDisplayText(GoldenTrainerModule.Instance.CompletionCount.ToString() + "/" + GoldenTrainerModule.Settings.NumberOfCompletions.ToString());
                 }
 
                 else if (GoldenTrainerModule.Settings.DecrementButton.Pressed && GoldenTrainerModule.Settings.NumberOfCompletions > 2)
@@ -91,19 +88,12 @@ namespace GoldenTrainer
 
             Y = Calc.Approach(Y, GetYPosition(), Engine.DeltaTime * 800f);
 
-            if (!_level.Paused)
-            {
-                _lerp = Calc.Approach(_lerp, 1f, 1.2f * Engine.RawDeltaTime);
-            }
-            else
-            {
-                _lerp = Calc.Approach(_lerp, 0f, 2f * Engine.RawDeltaTime);
-            }
+            _lerp = !_level.Paused ? Calc.Approach(_lerp, 1f, 1.2f * Engine.RawDeltaTime) : Calc.Approach(_lerp, 0f, 2f * Engine.RawDeltaTime);
         }
 
         public override void Render()
         {
-            this.Visible = GoldenTrainerModule.Settings.ActivateMod;
+            Visible = GoldenTrainerModule.Settings.ActivateMod;
             var basePos = Vector2.Lerp(new Vector2(0 - _width, Y), new Vector2(0, Y), Ease.CubeOut(_lerp)).Round();
 
             _bg.Draw(new Vector2(_width - _bg.Width + basePos.X, Y));

@@ -7,13 +7,11 @@ using Monocle;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using System;
-using System.Threading.Tasks;
 
 namespace GoldenTrainer
 {
     public class GoldenTrainerModule : EverestModule
     {
-        // Only one alive module instance can exist at any given time.
         public static GoldenTrainerModule Instance;
 
         public GoldenTrainerModule()
@@ -25,56 +23,51 @@ namespace GoldenTrainer
         public override Type SettingsType => typeof(GoldenTrainerSettings);
         public static GoldenTrainerSettings Settings => (GoldenTrainerSettings)Instance._Settings;
 
-        private bool DeathCausedByMod { get; set; } = false;
+        private bool DeathCausedByMod { get; set; }
 
-        private int _completionCount = 0;
+        private int _completionCount;
 
         public int CompletionCount
         {
-            get { return _completionCount; }
+            get => _completionCount;
             set
             {
                 _completionCount = value;
-                display.SetDisplayText(_completionCount + "/" + Settings.NumberOfCompletions);
+                Display.SetDisplayText(_completionCount + "/" + Settings.NumberOfCompletions);
             }
         }
 
 
-        public CompletionDisplay display = null;
-        public Level level = null;
+        public CompletionDisplay Display;
+        private Level _level;
 
-        public Session.CoreModes coreMode = Session.CoreModes.None;
+        private Session.CoreModes _coreMode = Session.CoreModes.None;
 
-        private int latestSummitCheckpointTriggered = -1;
+        private int _latestSummitCheckpointTriggered = -1;
 
-        private ILHook DieGoldenHook = null;
+        private ILHook _dieGoldenHook;
 
-        // Initialized in LoadContent, after graphics and other assets have been loaded.
-        public SpriteBank ExampleSpriteBank;
 
-        // Set up any hooks, event handlers and your mod in general here.
-        // Load runs before Celeste itself has initialized properly.
         public override void Load()
         {
-            // SetLogLevel will set the *minimum* log level that will be written for logs that use the given prefix string.
             Logger.SetLogLevel("GoldenTrainer", LogLevel.Verbose);
             Logger.Log(LogLevel.Info, "GoldenTrainer", "Loading GoldenTrainer Hooks");
-            // The default LogLevel when using Logger.Log is Verbose.
+
             On.Celeste.Level.TransitionTo += RespawnAtEnd;
             Everest.Events.Player.OnDie += ResetUponDeath;
             On.Celeste.LevelLoader.LoadingThread += (orig, self) =>
             {
                 orig(self);
-                self.Level.Add(display = new CompletionDisplay(self.Level));
-                display.SetDisplayText(CompletionCount + "/" + Settings.NumberOfCompletions);
-                display.Visible = Settings.ActivateMod;
-                level = self.Level;
+                self.Level.Add(Display = new CompletionDisplay(self.Level));
+                Display.SetDisplayText(CompletionCount + "/" + Settings.NumberOfCompletions);
+                Display.Visible = Settings.ActivateMod;
+                _level = self.Level;
             };
             On.Celeste.HeartGem.Collect += RespawnAtEndCrystal;
             On.Celeste.ChangeRespawnTrigger.OnEnter += RespawnAtEndTrigger;
             IL.Celeste.SummitCheckpoint.Update += SummitCheckpointHandler;
             On.Celeste.Session.Restart += OnSessionRestart;
-            DieGoldenHook = new ILHook(typeof(Player).GetMethod("orig_Die"), RespawnInRoomWithBerry);
+            _dieGoldenHook = new ILHook(typeof(Player).GetMethod("orig_Die"), RespawnInRoomWithBerry);
             On.Celeste.Level.Update += AutoSkipCutscene;
         }
 
@@ -88,7 +81,7 @@ namespace GoldenTrainer
         public override void Unload()
         {
             IL.Celeste.SummitCheckpoint.Update -= SummitCheckpointHandler;
-            DieGoldenHook?.Dispose();
+            _dieGoldenHook?.Dispose();
         }
 
         private void RespawnAtEnd(On.Celeste.Level.orig_TransitionTo orig, Level self, LevelData next, Vector2 direction)
@@ -106,7 +99,7 @@ namespace GoldenTrainer
                 {
                     CompletionCount = 0;
                     Audio.Play(SFX.game_07_checkpointconfetti);
-                    coreMode = level.CoreMode;
+                    _coreMode = _level.CoreMode;
                     orig(self, next, direction);
                 }
             }
@@ -126,7 +119,7 @@ namespace GoldenTrainer
                 }
                 else
                 {
-                    level.CoreMode = coreMode;
+                    _level.CoreMode = _coreMode;
                 }
                 DeathCausedByMod = false;
             }
@@ -153,7 +146,7 @@ namespace GoldenTrainer
         
         private void RespawnAtEndTrigger(On.Celeste.ChangeRespawnTrigger.orig_OnEnter orig, ChangeRespawnTrigger self, Player p)
         {
-            if (Settings.ActivateMod && self.Target != level.Session.RespawnPoint)
+            if (Settings.ActivateMod && self.Target != _level.Session.RespawnPoint)
             {
                 CompletionCount++;
                 if (CompletionCount < Settings.NumberOfCompletions)
@@ -196,7 +189,7 @@ namespace GoldenTrainer
 
         private static bool SummitCheckpointUpdateHook(Player p, SummitCheckpoint self)
         {
-            if (Instance.latestSummitCheckpointTriggered != self.Number && Settings.ActivateMod) {
+            if (Instance._latestSummitCheckpointTriggered != self.Number && Settings.ActivateMod) {
                 Instance.CompletionCount++;
                 if (Instance.CompletionCount < Settings.NumberOfCompletions)
                 {
@@ -206,17 +199,17 @@ namespace GoldenTrainer
                 else
                 {
                     Instance.CompletionCount = 0;
-                    Instance.latestSummitCheckpointTriggered = self.Number; // Check because for some reason it triggers twice ???
+                    Instance._latestSummitCheckpointTriggered = self.Number; // Check because for some reason it triggers twice ???
                 }
             }
-            return Instance.CompletionCount < Settings.NumberOfCompletions && Instance.latestSummitCheckpointTriggered != self.Number && Settings.ActivateMod;
+            return Instance.CompletionCount < Settings.NumberOfCompletions && Instance._latestSummitCheckpointTriggered != self.Number && Settings.ActivateMod;
         }
 
         private Session OnSessionRestart(On.Celeste.Session.orig_Restart orig, Session self, string intoLevel = null)
         {
-            Session session = orig(self, intoLevel);
-            latestSummitCheckpointTriggered = -1;
-            coreMode = Session.CoreModes.None;
+            var session = orig(self, intoLevel);
+            _latestSummitCheckpointTriggered = -1;
+            _coreMode = Session.CoreModes.None;
             CompletionCount = 0;
             return session;
         }
@@ -238,11 +231,9 @@ namespace GoldenTrainer
         private void AutoSkipCutscene(On.Celeste.Level.orig_Update orig, Level self)
         {
             orig(self);
-            if (self.InCutscene && !self.SkippingCutscene && Settings.SkipCutscenesAutomatically)
-            {
-                self.SkipCutscene();
-                Logger.Log(LogLevel.Info, "GoldenTrainer", "Skipping cutscene");
-            }
+            if (!self.InCutscene || self.SkippingCutscene || !Settings.SkipCutscenesAutomatically) return;
+            self.SkipCutscene();
+            Logger.Log(LogLevel.Info, "GoldenTrainer", "Skipping cutscene");
         }
     }
 }
