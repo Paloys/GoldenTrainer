@@ -1,1 +1,1 @@
-﻿
+﻿Activate_Mod_Setting_Name=Activate the Mod

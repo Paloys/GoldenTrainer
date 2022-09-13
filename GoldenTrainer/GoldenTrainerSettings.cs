@@ -5,7 +5,8 @@ namespace GoldenTrainer
 {
     public class GoldenTrainerSettings : EverestModuleSettings
     {
-
+        [SettingName("Activate_Mod_Setting_Name")]
+        [SettingSubText("Activate the main feature of the mod: respawn at the last checkpoint after completing a room.")]
         public bool ActivateMod { get; set; }
 
         private int _numberOfCompletions = 5;
