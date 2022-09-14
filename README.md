@@ -8,8 +8,5 @@ Once you have installed the mod via the Everest/Olympus launcher, you can setup 
 - If you want the mod to be activated or not
 - The required number of completions before switching to another screen.
 
-### Todo :
-- Fix a minor bug in 7A-3k with checkpoints 28 and 20 due to the fact that there is both a transition and a checkpoint trigger
-
 ### Contact me :
 I'm on the [official Celeste discord server](https://discord.gg/6qjaePQ) as Paloys#7527, feel free to dm me if you have a question !

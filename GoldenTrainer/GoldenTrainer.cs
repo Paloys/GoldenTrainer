@@ -18,12 +18,13 @@ namespace GoldenTrainer
         {
             Instance = this;
         }
-
-        // If you need to store settings:
+        
         public override Type SettingsType => typeof(GoldenTrainerSettings);
         public static GoldenTrainerSettings Settings => (GoldenTrainerSettings)Instance._Settings;
 
         private bool DeathCausedByMod { get; set; }
+        
+        private bool TransitionedAfterTransitionToCheck { get; set; }
 
         private int _completionCount;
 
@@ -46,8 +47,7 @@ namespace GoldenTrainer
         private int _latestSummitCheckpointTriggered = -1;
 
         private ILHook _dieGoldenHook;
-
-
+        
         public override void Load()
         {
             Logger.SetLogLevel("GoldenTrainer", LogLevel.Verbose);
@@ -93,6 +93,7 @@ namespace GoldenTrainer
                 {
                     Player p = self.Tracker.GetEntity<Player>();
                     Instance.DeathCausedByMod = true;
+                    Instance.TransitionedAfterTransitionToCheck = true;
                     p.Die(p.Position, true, false);
                 }
                 else
@@ -189,7 +190,8 @@ namespace GoldenTrainer
 
         private static bool SummitCheckpointUpdateHook(Player p, SummitCheckpoint self)
         {
-            if (Instance._latestSummitCheckpointTriggered != self.Number && Settings.ActivateMod) {
+            var temp = false;
+            if (Instance._latestSummitCheckpointTriggered != self.Number && Settings.ActivateMod && !Instance.TransitionedAfterTransitionToCheck) {
                 Instance.CompletionCount++;
                 if (Instance.CompletionCount < Settings.NumberOfCompletions)
                 {
@@ -201,8 +203,16 @@ namespace GoldenTrainer
                     Instance.CompletionCount = 0;
                     Instance._latestSummitCheckpointTriggered = self.Number; // Check because for some reason it triggers twice ???
                 }
+                temp = Instance.TransitionedAfterTransitionToCheck;
             }
-            return Instance.CompletionCount < Settings.NumberOfCompletions && Instance._latestSummitCheckpointTriggered != self.Number && Settings.ActivateMod;
+            else if (Instance.TransitionedAfterTransitionToCheck)
+            {
+                temp = Instance.TransitionedAfterTransitionToCheck;
+                Instance.TransitionedAfterTransitionToCheck = false;
+            }
+            return Instance.CompletionCount < Settings.NumberOfCompletions &&
+                   Instance._latestSummitCheckpointTriggered != self.Number && Settings.ActivateMod &&
+                   !temp;
         }
 
         private Session OnSessionRestart(On.Celeste.Session.orig_Restart orig, Session self, string intoLevel = null)
@@ -233,7 +243,6 @@ namespace GoldenTrainer
             orig(self);
             if (!self.InCutscene || self.SkippingCutscene || !Settings.SkipCutscenesAutomatically) return;
             self.SkipCutscene();
-            Logger.Log(LogLevel.Info, "GoldenTrainer", "Skipping cutscene");
         }
     }
 }
