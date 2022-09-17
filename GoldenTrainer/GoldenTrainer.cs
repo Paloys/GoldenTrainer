@@ -34,7 +34,14 @@ namespace GoldenTrainer
             set
             {
                 _completionCount = value;
-                Display.SetDisplayText(_completionCount + "/" + Settings.NumberOfCompletions);
+                if (value == 0)
+                {
+                    Display.SetDisplayText(_completionCount + "/" + Settings.NumberOfCompletions);
+                }
+                else
+                {
+                    Alarm.Set(Display, 1.5f, () => Display.SetDisplayText(_completionCount + "/" + Settings.NumberOfCompletions));
+                }
             }
         }
 
