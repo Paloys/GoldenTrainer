@@ -8,8 +8,6 @@ using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using System;
 using System.Collections;
-using System.Net.Sockets;
-using NPC09_Granny_Inside = On.Celeste.NPC09_Granny_Inside;
 
 namespace GoldenTrainer
 {
