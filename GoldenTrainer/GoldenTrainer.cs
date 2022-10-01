@@ -7,6 +7,9 @@ using Monocle;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using System;
+using System.Collections;
+using System.Net.Sockets;
+using NPC09_Granny_Inside = On.Celeste.NPC09_Granny_Inside;
 
 namespace GoldenTrainer
 {
@@ -34,15 +37,17 @@ namespace GoldenTrainer
             set
             {
                 _completionCount = value;
-                if (value == 0)
-                {
-                    Display.SetDisplayText(_completionCount + "/" + Settings.NumberOfCompletions);
-                }
-                else
-                {
-                    Alarm.Set(Display, 1.5f, () => Display.SetDisplayText(_completionCount + "/" + Settings.NumberOfCompletions));
-                }
+                Display?.Add(new Coroutine(DelayCountChangeRoutine()));
             }
+        }
+
+        private IEnumerator DelayCountChangeRoutine()
+        {
+            while (_level.Tracker.GetEntity<Player>() is null || _level.Tracker.GetEntity<Player>().Dead)
+            {
+                yield return Engine.DeltaTime;
+            }
+            Display.SetDisplayText(_completionCount + "/" + Settings.NumberOfCompletions);
         }
 
 

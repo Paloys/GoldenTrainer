@@ -19,8 +19,6 @@ namespace GoldenTrainer
 
         private float _width;
 
-
-
         public CompletionDisplay(Level level)
         {
             _level = level;
@@ -44,7 +42,7 @@ namespace GoldenTrainer
 
         public float GetYPosition()
         {
-            var posY = 10f * 16;
+            var posY = 10f * 16 + 10f;
 
             if (!_level.TimerHidden)
             {
@@ -97,7 +95,6 @@ namespace GoldenTrainer
             var basePos = Vector2.Lerp(new Vector2(0 - _width, Y), new Vector2(0, Y), Ease.CubeOut(_lerp)).Round();
 
             _bg.Draw(new Vector2(_width - _bg.Width + basePos.X, Y));
-
 
             if (_width > _bg.Width + basePos.X)
             {
