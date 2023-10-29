@@ -1,4 +1,12 @@
-﻿using Celeste;
+﻿//     _____       _     _         _______        _                 
+//    / ____|     | |   | |       |__   __|      (_)                
+//   | |  __  ___ | | __| | ___ _ __ | |_ __ __ _ _ _ __   ___ _ __ 
+//   | | |_ |/ _ \| |/ _` |/ _ \ '_ \| | '__/ _` | | '_ \ / _ \ '__|
+//   | |__| | (_) | | (_| |  __/ | | | | | | (_| | | | | |  __/ |   
+//    \_____|\___/|_|\__,_|\___|_| |_|_|_|  \__,_|_|_| |_|\___|_|   
+//                                                                  
+//                                                                  
+using Celeste;
 using Celeste.Mod;
 using Microsoft.Xna.Framework;
 using Mono.Cecil;
@@ -23,8 +31,6 @@ namespace GoldenTrainer
         public override Type SettingsType => typeof(GoldenTrainerSettings);
         public static GoldenTrainerSettings Settings => (GoldenTrainerSettings)Instance._Settings;
 
-        private bool DeathCausedByMod { get; set; }
-        
         private bool TransitionedAfterTransitionToCheck { get; set; }
 
         private int _completionCount;
@@ -48,11 +54,10 @@ namespace GoldenTrainer
             Display.SetDisplayText(_completionCount + "/" + Settings.NumberOfCompletions);
         }
 
+        public bool DeathCausedByMod { get; set; }
 
         public CompletionDisplay Display;
         private Level _level;
-
-        private Session.CoreModes _coreMode = Session.CoreModes.None;
 
         private int _latestSummitCheckpointTriggered = -1;
 
@@ -63,7 +68,7 @@ namespace GoldenTrainer
             Logger.SetLogLevel("GoldenTrainer", LogLevel.Verbose);
             Logger.Log(LogLevel.Info, "GoldenTrainer", "Loading GoldenTrainer Hooks");
 
-            On.Celeste.Level.TransitionTo += RespawnAtEnd;
+            On.Celeste.Level.TransitionTo += RespawnAtEndTransition;
             Everest.Events.Player.OnDie += ResetUponDeath;
             On.Celeste.LevelLoader.LoadingThread += (orig, self) =>
             {
@@ -80,37 +85,42 @@ namespace GoldenTrainer
             _dieGoldenHook = new ILHook(typeof(Player).GetMethod("orig_Die"), RespawnInRoomWithBerry);
             On.Celeste.Level.Update += AutoSkipCutscene;
         }
-
-
-        // Optional, initialize anything after Celeste has initialized itself properly.
+        
         public override void Initialize()
         {
         }
-
-        // Unload the entirety of your mod's content. Free up any native resources.
+        
         public override void Unload()
         {
             IL.Celeste.SummitCheckpoint.Update -= SummitCheckpointHandler;
             _dieGoldenHook?.Dispose();
         }
 
-        private void RespawnAtEnd(On.Celeste.Level.orig_TransitionTo orig, Level self, LevelData next, Vector2 direction)
+        private static void RespawnAtEnd()
+        {
+            /*Scene scene = p.Scene;
+            Instance._level.CoreMode = Instance._coreMode;
+            scene.Remove(p);
+            p = new Player(Instance._level.Session.RespawnPoint ?? p.Position, p.DefaultSpriteMode);
+            scene.Add(p);
+            Instance._level.DoScreenWipe(true);*/
+            Engine.Scene = new LevelLoader(Instance._level.Session);
+        }
+        
+        private void RespawnAtEndTransition(On.Celeste.Level.orig_TransitionTo orig, Level self, LevelData next, Vector2 direction)
         {
             if (Settings.ActivateMod)
             {
                 CompletionCount++;
                 if (CompletionCount < Settings.NumberOfCompletions)
                 {
-                    Player p = self.Tracker.GetEntity<Player>();
-                    Instance.DeathCausedByMod = true;
                     Instance.TransitionedAfterTransitionToCheck = true;
-                    p.Die(p.Position, true, false);
+                    RespawnAtEnd();
                 }
                 else
                 {
                     CompletionCount = 0;
                     Audio.Play(SFX.game_07_checkpointconfetti);
-                    _coreMode = _level.CoreMode;
                     orig(self, next, direction);
                 }
             }
@@ -122,18 +132,13 @@ namespace GoldenTrainer
 
         private void ResetUponDeath(Player player)
         {
-            if (Settings.ActivateMod)
+            if (!Settings.ActivateMod) return;
+            if (DeathCausedByMod)
             {
-                if (!DeathCausedByMod)
-                {
-                    CompletionCount = 0;
-                }
-                else
-                {
-                    _level.CoreMode = _coreMode;
-                }
                 DeathCausedByMod = false;
+                return;
             }
+            CompletionCount = 0;
         }
 
         private void RespawnAtEndCrystal(On.Celeste.HeartGem.orig_Collect orig, HeartGem self, Player player)
@@ -143,8 +148,9 @@ namespace GoldenTrainer
                 CompletionCount++;
                 if (CompletionCount < Settings.NumberOfCompletions)
                 {
-                    DeathCausedByMod = true;
-                    player.Die(player.Position, true, false);
+                    //DeathCausedByMod = true;
+                    //player.Die(Vector2.Zero, true, false);
+                    RespawnAtEnd();
                 }
                 else
                 {
@@ -162,8 +168,7 @@ namespace GoldenTrainer
                 CompletionCount++;
                 if (CompletionCount < Settings.NumberOfCompletions)
                 {
-                    DeathCausedByMod = true;
-                    p.Die(p.Position, true, false);
+                    RespawnAtEnd();
                 }
                 else
                 {
@@ -205,8 +210,7 @@ namespace GoldenTrainer
                 Instance.CompletionCount++;
                 if (Instance.CompletionCount < Settings.NumberOfCompletions)
                 {
-                    Instance.DeathCausedByMod = true;
-                    p.Die(p.Position, true, false);
+                    RespawnAtEnd();
                 }
                 else
                 {
@@ -229,7 +233,6 @@ namespace GoldenTrainer
         {
             var session = orig(self, intoLevel);
             _latestSummitCheckpointTriggered = -1;
-            _coreMode = Session.CoreModes.None;
             CompletionCount = 0;
             return session;
         }

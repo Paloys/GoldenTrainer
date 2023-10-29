@@ -1,6 +1,8 @@
 ﻿using Celeste;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using Monocle;
+using On.Celeste.Mod;
 
 namespace GoldenTrainer
 {
@@ -68,7 +70,6 @@ namespace GoldenTrainer
                 GoldenTrainerModule.Settings.ActivateMod = !GoldenTrainerModule.Settings.ActivateMod;
                 Visible = GoldenTrainerModule.Settings.ActivateMod;
             }
-
             if (GoldenTrainerModule.Settings.ActivateMod)
             {
                 if (GoldenTrainerModule.Settings.IncrementButton.Pressed && GoldenTrainerModule.Settings.NumberOfCompletions < 10)
