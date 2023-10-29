@@ -9,4 +9,4 @@ Once you have installed the mod via the Everest/Olympus launcher, you can setup 
 - The required number of completions before switching to another screen.
 
 ### Contact me :
-I'm on the [official Celeste discord server](https://discord.gg/6qjaePQ) as Paloys#7527, feel free to dm me if you have a question !
+I'm on the [official Celeste discord server](https://discord.gg/6qjaePQ) as @paloys, feel free to dm me if you have a question !
