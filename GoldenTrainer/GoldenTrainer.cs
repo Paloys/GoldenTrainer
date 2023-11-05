@@ -246,7 +246,7 @@ namespace GoldenTrainer
         private void AutoSkipCutscene(On.Celeste.Level.orig_Update orig, Level self)
         {
             orig(self);
-            if (!self.InCutscene || self.SkippingCutscene || !Settings.SkipCutscenesAutomatically) return;
+            if (!self.InCutscene || self.SkippingCutscene || !Settings.SkipCutscenesAutomatically || self.Transitioning) return;
             self.SkipCutscene();
         }
     }
