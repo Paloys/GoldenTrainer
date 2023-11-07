@@ -8,6 +8,7 @@ using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using System;
 using System.Collections;
+using System.Linq;
 
 namespace GoldenTrainer
 {
@@ -90,18 +91,36 @@ namespace GoldenTrainer
 
         private static void RespawnAtEnd()
         {
-            /*Scene scene = p.Scene;
-            Instance._level.CoreMode = Instance._coreMode;
-            scene.Remove(p);
-            p = new Player(Instance._level.Session.RespawnPoint ?? p.Position, p.DefaultSpriteMode);
-            scene.Add(p);
-            Instance._level.DoScreenWipe(true);*/
             Engine.Scene = new LevelLoader(Instance._level.Session);
+        }
+        
+        private static bool PlayerIsHoldingGoldenBerry(Player player) {
+            return player?.Leader?.Followers?.Any(f => {
+                if (f.Entity.GetType().Name == "PlatinumBerry") {
+                    return true;
+                }
+                
+                if (!(f.Entity is Strawberry)) {
+                    return false;
+                }
+
+                Strawberry berry = (Strawberry)f.Entity;
+                
+                return berry.Golden && !berry.Winged;
+            }) ?? false;
+        }
+        
+        private static bool ShouldRespawn(Player player) {
+            return Settings.ActivateMod && !PlayerIsHoldingGoldenBerry(player);
+        }
+
+        private bool ShouldRespawn(Level level) {
+            return Settings.ActivateMod && !PlayerIsHoldingGoldenBerry(level.Tracker.GetEntity<Player>());
         }
         
         private void RespawnAtEndTransition(On.Celeste.Level.orig_TransitionTo orig, Level self, LevelData next, Vector2 direction)
         {
-            if (Settings.ActivateMod)
+            if (ShouldRespawn(self))
             {
                 CompletionCount++;
                 if (CompletionCount < Settings.NumberOfCompletions)
@@ -124,7 +143,7 @@ namespace GoldenTrainer
 
         private void ResetUponDeath(Player player)
         {
-            if (!Settings.ActivateMod) return;
+            if (!ShouldRespawn(player)) return;
             if (DeathCausedByMod)
             {
                 DeathCausedByMod = false;
@@ -135,13 +154,11 @@ namespace GoldenTrainer
 
         private void RespawnAtEndCrystal(On.Celeste.HeartGem.orig_Collect orig, HeartGem self, Player player)
         {
-            if (Settings.ActivateMod && !self.IsFake)
+            if (ShouldRespawn(player) && !self.IsFake)
             {
                 CompletionCount++;
                 if (CompletionCount < Settings.NumberOfCompletions)
                 {
-                    //DeathCausedByMod = true;
-                    //player.Die(Vector2.Zero, true, false);
                     RespawnAtEnd();
                 }
                 else
@@ -155,7 +172,7 @@ namespace GoldenTrainer
         
         private void RespawnAtEndTrigger(On.Celeste.ChangeRespawnTrigger.orig_OnEnter orig, ChangeRespawnTrigger self, Player p)
         {
-            if (Settings.ActivateMod && self.Target != _level.Session.RespawnPoint)
+            if (ShouldRespawn(p) && self.Target != _level.Session.RespawnPoint)
             {
                 CompletionCount++;
                 if (CompletionCount < Settings.NumberOfCompletions)
@@ -198,7 +215,7 @@ namespace GoldenTrainer
         private static bool SummitCheckpointUpdateHook(Player p, SummitCheckpoint self)
         {
             var temp = false;
-            if (Instance._latestSummitCheckpointTriggered != self.Number && Settings.ActivateMod && !Instance.TransitionedAfterTransitionToCheck) {
+            if (Instance._latestSummitCheckpointTriggered != self.Number && ShouldRespawn(p) && !Instance.TransitionedAfterTransitionToCheck) {
                 Instance.CompletionCount++;
                 if (Instance.CompletionCount < Settings.NumberOfCompletions)
                 {
@@ -223,10 +240,9 @@ namespace GoldenTrainer
 
         private Session OnSessionRestart(On.Celeste.Session.orig_Restart orig, Session self, string intoLevel = null)
         {
-            var session = orig(self, intoLevel);
             _latestSummitCheckpointTriggered = -1;
             CompletionCount = 0;
-            return session;
+            return orig(self, intoLevel);
         }
 
         private void RespawnInRoomWithBerry(ILContext il)

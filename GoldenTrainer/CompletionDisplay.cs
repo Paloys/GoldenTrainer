@@ -1,8 +1,6 @@
 ﻿using Celeste;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using Monocle;
-using On.Celeste.Mod;
 
 namespace GoldenTrainer
 {
@@ -20,6 +18,8 @@ namespace GoldenTrainer
         private float _lerp;
 
         private float _width;
+        
+        
 
         public CompletionDisplay(Level level)
         {
@@ -63,12 +63,10 @@ namespace GoldenTrainer
 
         public override void Update()
         {
-
             if (GoldenTrainerModule.Settings.ActivateButton.Pressed)
             {
                 GoldenTrainerModule.Instance.CompletionCount = 0;
                 GoldenTrainerModule.Settings.ActivateMod = !GoldenTrainerModule.Settings.ActivateMod;
-                Visible = GoldenTrainerModule.Settings.ActivateMod;
             }
             if (GoldenTrainerModule.Settings.ActivateMod)
             {
@@ -87,12 +85,11 @@ namespace GoldenTrainer
 
             Y = Calc.Approach(Y, GetYPosition(), Engine.DeltaTime * 800f);
 
-            _lerp = !_level.Paused ? Calc.Approach(_lerp, 1f, 1.2f * Engine.RawDeltaTime) : Calc.Approach(_lerp, 0f, 2f * Engine.RawDeltaTime);
+            _lerp = GoldenTrainerModule.Settings.ActivateMod && !(_level.Paused ^ _level.PauseMainMenuOpen) ? Calc.Approach(_lerp, 1f, 1.2f * Engine.RawDeltaTime) : Calc.Approach(_lerp, 0f, 2f * Engine.RawDeltaTime);
         }
 
         public override void Render()
         {
-            Visible = GoldenTrainerModule.Settings.ActivateMod;
             var basePos = Vector2.Lerp(new Vector2(0 - _width, Y), new Vector2(0, Y), Ease.CubeOut(_lerp)).Round();
 
             _bg.Draw(new Vector2(_width - _bg.Width + basePos.X, Y));
