@@ -47,8 +47,6 @@ namespace GoldenTrainer
             Display.SetDisplayText(_completionCount + "/" + Settings.NumberOfCompletions);
         }
 
-        public bool DeathCausedByMod { get; set; }
-
         public CompletionDisplay Display;
         private Level _level;
 
@@ -63,13 +61,13 @@ namespace GoldenTrainer
 
             On.Celeste.Level.TransitionTo += RespawnAtEndTransition;
             Everest.Events.Player.OnDie += ResetUponDeath;
-            On.Celeste.LevelLoader.LoadingThread += (orig, self) =>
+            On.Celeste.LevelLoader.LoadingThread += static (orig, self) =>
             {
                 orig(self);
-                self.Level.Add(Display = new CompletionDisplay(self.Level));
-                Display.SetDisplayText(CompletionCount + "/" + Settings.NumberOfCompletions);
-                Display.Visible = Settings.ActivateMod;
-                _level = self.Level;
+                self.Level.Add(Instance.Display = new CompletionDisplay(self.Level));
+                Instance.Display.SetDisplayText(Instance.CompletionCount + "/" + Settings.NumberOfCompletions);
+                Instance.Display.Visible = Settings.ActivateMod;
+                Instance._level = self.Level;
             };
             On.Celeste.HeartGem.Collect += RespawnAtEndCrystal;
             On.Celeste.ChangeRespawnTrigger.OnEnter += RespawnAtEndTrigger;
@@ -100,12 +98,10 @@ namespace GoldenTrainer
                     return true;
                 }
                 
-                if (!(f.Entity is Strawberry)) {
+                if (!(f.Entity is Strawberry berry)) {
                     return false;
                 }
 
-                Strawberry berry = (Strawberry)f.Entity;
-                
                 return berry.Golden && !berry.Winged;
             }) ?? false;
         }
@@ -114,23 +110,23 @@ namespace GoldenTrainer
             return Settings.ActivateMod && !PlayerIsHoldingGoldenBerry(player);
         }
 
-        private bool ShouldRespawn(Level level) {
+        private static bool ShouldRespawn(Level level) {
             return Settings.ActivateMod && !PlayerIsHoldingGoldenBerry(level.Tracker.GetEntity<Player>());
         }
-        
-        private void RespawnAtEndTransition(On.Celeste.Level.orig_TransitionTo orig, Level self, LevelData next, Vector2 direction)
+
+        private static void RespawnAtEndTransition(On.Celeste.Level.orig_TransitionTo orig, Level self, LevelData next, Vector2 direction)
         {
             if (ShouldRespawn(self))
             {
-                CompletionCount++;
-                if (CompletionCount < Settings.NumberOfCompletions)
+                Instance.CompletionCount++;
+                if (Instance.CompletionCount < Settings.NumberOfCompletions)
                 {
                     Instance.TransitionedAfterTransitionToCheck = true;
                     RespawnAtEnd();
                 }
                 else
                 {
-                    CompletionCount = 0;
+                    Instance.CompletionCount = 0;
                     Audio.Play(SFX.game_07_checkpointconfetti);
                     orig(self, next, direction);
                 }
@@ -143,45 +139,40 @@ namespace GoldenTrainer
 
         private void ResetUponDeath(Player player)
         {
-            if (!ShouldRespawn(player)) return;
-            if (DeathCausedByMod)
-            {
-                DeathCausedByMod = false;
-                return;
-            }
+            if (Settings.ActivateMod) return;
             CompletionCount = 0;
         }
 
-        private void RespawnAtEndCrystal(On.Celeste.HeartGem.orig_Collect orig, HeartGem self, Player player)
+        private static void RespawnAtEndCrystal(On.Celeste.HeartGem.orig_Collect orig, HeartGem self, Player player)
         {
             if (ShouldRespawn(player) && !self.IsFake)
             {
-                CompletionCount++;
-                if (CompletionCount < Settings.NumberOfCompletions)
+                Instance.CompletionCount++;
+                if (Instance.CompletionCount < Settings.NumberOfCompletions)
                 {
                     RespawnAtEnd();
                 }
                 else
                 {
-                    CompletionCount = 0;
+                    Instance.CompletionCount = 0;
                     Audio.Play(SFX.game_07_checkpointconfetti);
                 }
             }
             orig(self, player);
         }
-        
-        private void RespawnAtEndTrigger(On.Celeste.ChangeRespawnTrigger.orig_OnEnter orig, ChangeRespawnTrigger self, Player p)
+
+        private static void RespawnAtEndTrigger(On.Celeste.ChangeRespawnTrigger.orig_OnEnter orig, ChangeRespawnTrigger self, Player p)
         {
-            if (ShouldRespawn(p) && self.Target != _level.Session.RespawnPoint)
+            if (ShouldRespawn(p) && self.Target != Instance._level.Session.RespawnPoint)
             {
-                CompletionCount++;
-                if (CompletionCount < Settings.NumberOfCompletions)
+                Instance.CompletionCount++;
+                if (Instance.CompletionCount < Settings.NumberOfCompletions)
                 {
                     RespawnAtEnd();
                 }
                 else
                 {
-                    CompletionCount = 0;
+                    Instance.CompletionCount = 0;
                     Audio.Play(SFX.game_07_checkpointconfetti);
                     orig(self, p);
                 }
@@ -192,7 +183,7 @@ namespace GoldenTrainer
             }
         }
 
-        private void SummitCheckpointHandler(ILContext il)
+        private static void SummitCheckpointHandler(ILContext il)
         {
             ILCursor cursor = new ILCursor(il);
             if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Entity>("get_Scene"), instr => instr.MatchIsinst<Level>()))
@@ -238,10 +229,10 @@ namespace GoldenTrainer
                    !temp;
         }
 
-        private Session OnSessionRestart(On.Celeste.Session.orig_Restart orig, Session self, string intoLevel = null)
+        private static Session OnSessionRestart(On.Celeste.Session.orig_Restart orig, Session self, string intoLevel = null)
         {
-            _latestSummitCheckpointTriggered = -1;
-            CompletionCount = 0;
+            Instance._latestSummitCheckpointTriggered = -1;
+            Instance.CompletionCount = 0;
             return orig(self, intoLevel);
         }
 
@@ -259,7 +250,7 @@ namespace GoldenTrainer
             }
         }
 
-        private void AutoSkipCutscene(On.Celeste.Level.orig_Update orig, Level self)
+        private static void AutoSkipCutscene(On.Celeste.Level.orig_Update orig, Level self)
         {
             orig(self);
             if (!self.InCutscene || self.SkippingCutscene || !Settings.SkipCutscenesAutomatically || self.Transitioning || !self.CanPause) return;

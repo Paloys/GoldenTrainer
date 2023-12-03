@@ -1,4 +1,7 @@
-﻿using Celeste;
+﻿using System;
+using System.Reflection;
+using Celeste;
+using Celeste.Mod;
 using Microsoft.Xna.Framework;
 using Monocle;
 
@@ -18,8 +21,6 @@ namespace GoldenTrainer
         private float _lerp;
 
         private float _width;
-        
-        
 
         public CompletionDisplay(Level level)
         {
@@ -63,24 +64,23 @@ namespace GoldenTrainer
 
         public override void Update()
         {
-            if (GoldenTrainerModule.Settings.ActivateButton.Pressed)
+            if (GoldenTrainerModule.Settings.ActivateButton.Pressed && !_level.Paused)
             {
                 GoldenTrainerModule.Instance.CompletionCount = 0;
                 GoldenTrainerModule.Settings.ActivateMod = !GoldenTrainerModule.Settings.ActivateMod;
             }
             if (GoldenTrainerModule.Settings.ActivateMod)
             {
-                if (GoldenTrainerModule.Settings.IncrementButton.Pressed && GoldenTrainerModule.Settings.NumberOfCompletions < 10)
+                if (GoldenTrainerModule.Settings.IncrementButton.Pressed && GoldenTrainerModule.Settings.NumberOfCompletions < 10 && !_level.Paused)
                 {
                     GoldenTrainerModule.Settings.NumberOfCompletions++;
                 }
 
-                else if (GoldenTrainerModule.Settings.DecrementButton.Pressed && GoldenTrainerModule.Settings.NumberOfCompletions > 2)
+                else if (GoldenTrainerModule.Settings.DecrementButton.Pressed && GoldenTrainerModule.Settings.NumberOfCompletions > 2 && !_level.Paused)
                 {
                     GoldenTrainerModule.Settings.NumberOfCompletions--;
                 }
             }
-            
             base.Update();
 
             Y = Calc.Approach(Y, GetYPosition(), Engine.DeltaTime * 800f);
